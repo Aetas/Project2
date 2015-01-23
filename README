@@ -1,0 +1,6 @@
+Cursory and initial README for project 2 for CSCI 2270
+GNU GPL 3.0 - read LISCENCE
+
+Simple program to (hopefully, I haven't started as of yet.) ghetto-parse two documents, looking for patterns and trying to distinguish who wrote what.
+
+
