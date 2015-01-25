@@ -79,7 +79,7 @@ void define_blacklist(string *blacklist[])	//Not a very pleasant way, but I have
 {
 	*blacklist[0] = "the";
 	*blacklist[1] = "be";
-	*blacklist[2] = "two";
+	*blacklist[2] = "to";
 	*blacklist[3] = "of";
 	*blacklist[4] = "and";
 	*blacklist[5] = "a";
