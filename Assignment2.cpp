@@ -21,7 +21,7 @@ using std::cin;
 using std::cout;
 using std::string;
 
-//string blacklist[50];	//global for now -> I'll have to see where the program goes from there.
+//string blacklist[51];	//global for now -> I'll have to see where the program goes from there.
 void define_blacklist(string *blacklist[]);
 void pull();
 void fetch_document(string &document);
@@ -42,7 +42,7 @@ int main()
 	std::ifstream in_doc;	//make ifstream
 	in_doc.open(document);	//open file
 
-	string *blacklist = new string[50];	//create the blacklist on a ptr so I dont have to reinitialize 50 strings in the blacklist function
+	string *blacklist = new string[51];	//create the blacklist on a ptr so I dont have to reinitialize 50 strings in the blacklist function
 	//string blacklist[50];
 	define_blacklist(&blacklist);	//put in the 50 ignore words
 	
@@ -79,7 +79,7 @@ void define_blacklist(string *blacklist[])	//Not a very pleasant way, but I have
 {
 	*blacklist[0] = "the";
 	*blacklist[1] = "be";
-	*blacklist[2] = "to";
+	*blacklist[2] = "two";
 	*blacklist[3] = "of";
 	*blacklist[4] = "and";
 	*blacklist[5] = "a";
@@ -127,4 +127,5 @@ void define_blacklist(string *blacklist[])	//Not a very pleasant way, but I have
 	*blacklist[47] = "which";
 	*blacklist[48] = "go";
 	*blacklist[49] = "me";
+	*blacklist[50] = "to";	//sneaky
 }
