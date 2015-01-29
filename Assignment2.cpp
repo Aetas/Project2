@@ -6,9 +6,8 @@
 //
 
 #include<iostream>
-#include<cstdlib>
+//#include<cstdlib>
 #include<string>
-#include<sstream>
 #include<fstream>
 
 using std::endl;
@@ -19,7 +18,7 @@ using std::string;
 struct wordbank
 {
 	string word;
-	size_t count = 0;
+	int count = 0;
 };
 
 struct blacklist	//because why not, now i have a constructor
@@ -28,12 +27,10 @@ struct blacklist	//because why not, now i have a constructor
 	string list[50];
 };
 
-//string blacklist[51];	//global for now -> I'll have to see where the program goes from there.
-void pull(std::ifstream &in_doc, wordbank bank[]);
-void fetch_document(string &document);
-void double_array(wordbank bank[]);
-void commit(wordbank bank[], string &buffer, int top);
-bool if_commons(string &buffer, wordbank bank[]);
+void pull(std::ifstream &in_doc, wordbank *bank[]);
+void double_array(wordbank *bank[]);
+void commit(wordbank *bank[], string &buffer, int top);
+bool if_commons(string &buffer, wordbank *bank[]);
 
 blacklist nay;		//nay tarry 'bout these words. or that there are 50 global strings floating about.
 int size = 100;		//for doubling and book keeping
@@ -43,18 +40,19 @@ int made = 0;
 int main()
 {
 	string document;	//doc-to-be
-	size_t print_num;	//number of top words to print
-	fetch_document(document);
-	cin >> print_num;
+	int print_num;	//number of top words to print
+//	cin >> document >> print_num;
+	//cin >> print_num;
+	print_num = 10;
 
 	std::ifstream in_doc;	//make ifstream
-	in_doc.open(document);	//open file
+	in_doc.open("Hemingway_edit.txt"/*document*/);	//open file
 
 	wordbank *bank = new wordbank[size];	//start with the initial 100.
 	
 	if (in_doc.is_open())	//check if it opened successfully
 	{
-		pull(in_doc, bank);	//pull words
+		pull(in_doc, &bank);	//pull words
 		in_doc.close();	//close doc after done
 	}
 	else	//otherwise it didnt open
@@ -66,7 +64,7 @@ int main()
 			getline(cin, document);
 			in_doc.open(document);	//open again to update contitions
 		}
-		pull(in_doc, bank);				//pull words
+		pull(in_doc, &bank);				//pull words
 		in_doc.close();		//close after end
 	}
 
@@ -85,16 +83,11 @@ int main()
 	return 0;
 }
 
-void fetch_document(string &document)
-{
-	getline(cin, document);
-}
-
-void pull(std::ifstream &in_doc, wordbank bank[])	//grab words.
+void pull(std::ifstream &in_doc, wordbank *bank[])	//grab words.
 {
 	string buffer;
 	int position = 0;
-	while (getline(in_doc, buffer))
+	while (getline(in_doc, buffer, ' '))
 	{
 		if (if_commons(buffer, bank))
 		{/*nothing*/}
@@ -112,45 +105,45 @@ void pull(std::ifstream &in_doc, wordbank bank[])	//grab words.
 
 }
 
-void double_array(wordbank bank[])	//doubles
+void double_array(wordbank *bank[])	//doubles
 {
 	wordbank* temp = new wordbank[size*2];
 	for (int i = 0; i < size; i++)
 	{
-		temp[i].word = bank[i].word;
-		temp[i].count = bank[i].count;
+		temp[i].word = bank[i]->word;
+		temp[i].count = bank[i]->count;
 	}
 	size *= 2;
-	delete[]bank;
-	bank = temp;
-	delete[]temp;	//not sure if this is needed.
+	//delete[]bank;
+	*bank = temp;
+	//delete[]temp;	//not sure if this is needed.
 }
 
-bool if_commons(string &buffer, wordbank bank[])
+bool if_commons(string &buffer, wordbank *bank[])
 {
 	for (int i = 0; i < size; i++)
 	{
-		if (buffer.compare(bank[i].word) == 0)
+		if (buffer.compare(bank[i]->word) == 0)
 			return true;
 	}
 	return false;
 }
 
-void commit(wordbank bank[], string &buffer, int top)
+void commit(wordbank *bank[], string &buffer, int top)
 {
 	bool flag = false;
 	for (int i = 0; i < top; i++)
 	{
-		if (buffer.compare(bank[i].word) == 0)
+		if (buffer.compare(bank[i]->word) == 0)
 		{
-			bank[i].count++;
+			bank[i]->count++;
 			flag = true;
 		}
 	}
 	if (flag == false)
 	{
-		bank[top].word = buffer;
-		bank[top].count++;
+		bank[top]->word = buffer;
+		bank[top]->count++;
 	}
 }
 
