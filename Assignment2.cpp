@@ -11,26 +11,34 @@
 #include<sstream>
 #include<fstream>
 
-/*
- create blaclist string blacklist[100] to step through and check?
-probably have to.
-*/
-
 using std::endl;
 using std::cin;
 using std::cout;
 using std::string;
 
-//string blacklist[51];	//global for now -> I'll have to see where the program goes from there.
-void define_blacklist(string *blacklist[]);
-void pull();
-void fetch_document(string &document);
-
 struct wordbank
 {
 	string word;
-	size_t count;
+	size_t count = 0;
 };
+
+struct blacklist	//because why not, now i have a constructor
+{
+	blacklist();
+	string list[50];
+};
+
+//string blacklist[51];	//global for now -> I'll have to see where the program goes from there.
+void pull(std::ifstream &in_doc, wordbank bank[]);
+void fetch_document(string &document);
+void double_array(wordbank bank[]);
+void commit(wordbank bank[], string &buffer, int top);
+bool if_commons(string &buffer, wordbank bank[]);
+
+blacklist nay;		//nay tarry 'bout these words. or that there are 50 global strings floating about.
+int size = 100;		//for doubling and book keeping
+int doubled = 0;	//how many times doubled
+int made = 0;
 
 int main()
 {
@@ -42,13 +50,11 @@ int main()
 	std::ifstream in_doc;	//make ifstream
 	in_doc.open(document);	//open file
 
-	string *blacklist = new string[50];	//create the blacklist on a ptr so I dont have to reinitialize 50 strings in the blacklist function
-	//string blacklist[50];
-	define_blacklist(&blacklist);	//put in the 50 ignore words
+	wordbank *bank = new wordbank[size];	//start with the initial 100.
 	
 	if (in_doc.is_open())	//check if it opened successfully
 	{
-		pull();	//pull words
+		pull(in_doc, bank);	//pull words
 		in_doc.close();	//close doc after done
 	}
 	else	//otherwise it didnt open
@@ -57,12 +63,22 @@ int main()
 		{
 			cout << "\n Document not found"
 				<< "\n <name.txt>: ";
-			getline(cin, document, ' ');
+			getline(cin, document);
 			in_doc.open(document);	//open again to update contitions
 		}
-		pull();				//pull words
+		pull(in_doc, bank);				//pull words
 		in_doc.close();		//close after end
 	}
+
+	//print stuff.
+	for (int i = 0; i < print_num; i++)
+	{
+		cout << bank[i].count << " - " << bank[i].word << endl;
+		cout << "#" << endl;
+	}
+	cout << "Array doubled: " << doubled << endl;
+	cout << "#" << endl;
+	cout << "Unique non-common words: " << made << endl;
 
 	cout << endl
 		<< endl;
@@ -71,60 +87,123 @@ int main()
 
 void fetch_document(string &document)
 {
-	getline(cin, document, ' ');
+	getline(cin, document);
 }
 
-
-void define_blacklist(string *blacklist[])	//Not a very pleasant way, but I have to start somewhere and this was easy.
+void pull(std::ifstream &in_doc, wordbank bank[])	//grab words.
 {
-	*blacklist[0] = "the";
-	*blacklist[1] = "be";
-	*blacklist[2] = "to";
-	*blacklist[3] = "of";
-	*blacklist[4] = "and";
-	*blacklist[5] = "a";
-	*blacklist[6] = "in";
-	*blacklist[7] = "that";
-	*blacklist[8] = "have";
-	*blacklist[9] = "i";
-	*blacklist[10] = "it";
-	*blacklist[11] = "for";
-	*blacklist[12] = "not";
-	*blacklist[13] = "on";
-	*blacklist[14] = "with";
-	*blacklist[15] = "he";
-	*blacklist[16] = "as";
-	*blacklist[17] = "you";
-	*blacklist[18] = "do";
-	*blacklist[19] = "at";
-	*blacklist[20] = "this";
-	*blacklist[21] = "but";
-	*blacklist[22] = "his";
-	*blacklist[23] = "by";
-	*blacklist[24] = "from";
-	*blacklist[25] = "they";
-	*blacklist[26] = "we";
-	*blacklist[27] = "say";
-	*blacklist[28] = "her";
-	*blacklist[29] = "she";
-	*blacklist[30] = "or";
-	*blacklist[31] = "an";
-	*blacklist[32] = "will";
-	*blacklist[33] = "my";
-	*blacklist[34] = "one";
-	*blacklist[35] = "all";
-	*blacklist[36] = "would";
-	*blacklist[37] = "there";
-	*blacklist[38] = "their";
-	*blacklist[39] = "what";
-	*blacklist[40] = "so";
-	*blacklist[41] = "up";
-	*blacklist[42] = "out";
-	*blacklist[43] = "if";
-	*blacklist[44] = "about";
-	*blacklist[45] = "who";
-	*blacklist[46] = "get";
-	*blacklist[47] = "which";
-	*blacklist[48] = "go";
-	*blacklist[49] = "me";
+	string buffer;
+	int position = 0;
+	while (getline(in_doc, buffer))
+	{
+		if (if_commons(buffer, bank))
+		{/*nothing*/}
+		else
+		{
+			commit(bank, buffer, made);
+			made++;
+		}
+		if (made == size - 1)
+		{
+			double_array(bank); 
+			doubled++;
+		}
+	}
+
+}
+
+void double_array(wordbank bank[])	//doubles
+{
+	wordbank* temp = new wordbank[size*2];
+	for (int i = 0; i < size; i++)
+	{
+		temp[i].word = bank[i].word;
+		temp[i].count = bank[i].count;
+	}
+	size *= 2;
+	delete[]bank;
+	bank = temp;
+	delete[]temp;	//not sure if this is needed.
+}
+
+bool if_commons(string &buffer, wordbank bank[])
+{
+	for (int i = 0; i < size; i++)
+	{
+		if (buffer.compare(bank[i].word) == 0)
+			return true;
+	}
+	return false;
+}
+
+void commit(wordbank bank[], string &buffer, int top)
+{
+	bool flag = false;
+	for (int i = 0; i < top; i++)
+	{
+		if (buffer.compare(bank[i].word) == 0)
+		{
+			bank[i].count++;
+			flag = true;
+		}
+	}
+	if (flag == false)
+	{
+		bank[top].word = buffer;
+		bank[top].count++;
+	}
+}
+
+blacklist::blacklist()	//Not a very pleasant way, but I have to start somewhere and this was easy. Also yay constructors.
+{
+	list[0] = "the";
+	list[1] = "be";
+	list[2] = "to";
+	list[3] = "of";
+	list[4] = "and";
+	list[5] = "a";
+	list[6] = "in";
+	list[7] = "that";
+	list[8] = "have";
+	list[9] = "i";
+	list[10] = "it";
+	list[11] = "for";
+	list[12] = "not";
+	list[13] = "on";
+	list[14] = "with";
+	list[15] = "he";
+	list[16] = "as";
+	list[17] = "you";
+	list[18] = "do";
+	list[19] = "at";
+	list[20] = "this";
+	list[21] = "but";
+	list[22] = "his";
+	list[23] = "by";
+	list[24] = "from";
+	list[25] = "they";
+	list[26] = "we";
+	list[27] = "say";
+	list[28] = "her";
+	list[29] = "she";
+	list[30] = "or";
+	list[31] = "an";
+	list[32] = "will";
+	list[33] = "my";
+	list[34] = "one";
+	list[35] = "all";
+	list[36] = "would";
+	list[37] = "there";
+	list[38] = "their";
+	list[39] = "what";
+	list[40] = "so";
+	list[41] = "up";
+	list[42] = "out";
+	list[43] = "if";
+	list[44] = "about";
+	list[45] = "who";
+	list[46] = "get";
+	list[47] = "which";
+	list[48] = "go";
+	list[49] = "me";
 }
