@@ -6,7 +6,7 @@
 //
 
 #include<iostream>
-//#include<cstdlib>
+#include<cstdlib>
 #include<string>
 #include<fstream>
 
@@ -27,35 +27,52 @@ struct blacklist	//because why not, now i have a constructor
 	string list[50];
 };
 
-void pull(std::ifstream &in_doc, wordbank *bank[]);
-void double_array(wordbank *bank[]);
-void commit(wordbank *bank[], string &buffer, int top);
-bool if_commons(string &buffer, wordbank *bank[]);
+void pull(std::ifstream &in_doc, wordbank bank[]);
+wordbank* double_array(wordbank bank[]);
+void commit(wordbank bank[], string &buffer);
+bool if_commons(string &buffer);
+void sort(wordbank bank[]);
 
 blacklist nay;		//nay tarry 'bout these words. or that there are 50 global strings floating about.
 int size = 100;		//for doubling and book keeping
 int doubled = 0;	//how many times doubled
-int made = 0;
+int made = 0;		//entries made
+int total = 0;		//commits
 
 int main()
 {
 	string document;	//doc-to-be
-	int print_num;	//number of top words to print
-//	cin >> document >> print_num;
-	//cin >> print_num;
+	int print_num;		//number of top words to print
+	cin >> document >> print_num;
 	print_num = 10;
 
 	std::ifstream in_doc;	//make ifstream
-	in_doc.open("Hemingway_edit.txt"/*document*/);	//open file
+	in_doc.open(document);	//open file
 
 	wordbank *bank = new wordbank[size];	//start with the initial 100.
 	
 	if (in_doc.is_open())	//check if it opened successfully
 	{
-		pull(in_doc, &bank);	//pull words
+		string buffer;
+
+		while (in_doc >> buffer)
+		{
+//			cout << " pull";
+			if (if_commons(buffer) == true)
+			{/*nothing*/}
+			else
+			{
+				commit(bank, buffer);
+			}
+			if (made == size - 1)
+			{
+				bank = double_array(bank);
+				doubled++;
+			}
+		}
 		in_doc.close();	//close doc after done
 	}
-	else	//otherwise it didnt open
+/*	else	//otherwise it didnt open
 	{
 		while (!in_doc.is_open())	//query reoeatedly until file is found.
 		{
@@ -64,11 +81,12 @@ int main()
 			getline(cin, document);
 			in_doc.open(document);	//open again to update contitions
 		}
-		pull(in_doc, &bank);				//pull words
-		in_doc.close();		//close after end
-	}
+		pull(in_doc, &bank);		//pull words
+		in_doc.close();				//close after end
+	}*/
 
 	//print stuff.
+	sort(bank);
 	for (int i = 0; i < print_num; i++)
 	{
 		cout << bank[i].count << " - " << bank[i].word << endl;
@@ -77,73 +95,102 @@ int main()
 	cout << "Array doubled: " << doubled << endl;
 	cout << "#" << endl;
 	cout << "Unique non-common words: " << made << endl;
+	cout << "#" << endl;
+	cout << "Total non-common words: " << total << endl;
 
 	cout << endl
 		<< endl;
 	return 0;
 }
 
-void pull(std::ifstream &in_doc, wordbank *bank[])	//grab words.
+/*void pull(std::ifstream &in_doc, wordbank *bank[])	//grab words.
 {
 	string buffer;
 	int position = 0;
 	while (getline(in_doc, buffer, ' '))
 	{
 		if (if_commons(buffer, bank))
-		{/*nothing*/}
+		{/*nothing*//*}
 		else
 		{
 			commit(bank, buffer, made);
-			made++;
+			total++;
 		}
 		if (made == size - 1)
 		{
-			double_array(bank); 
+			bank = double_array(bank); 
 			doubled++;
 		}
 	}
 
-}
+}*/
 
-void double_array(wordbank *bank[])	//doubles
+wordbank* double_array(wordbank bank[])	//doubles
 {
 	wordbank* temp = new wordbank[size*2];
 	for (int i = 0; i < size; i++)
 	{
-		temp[i].word = bank[i]->word;
-		temp[i].count = bank[i]->count;
+		temp[i].word = (&bank[i])->word;
+		temp[i].count = (&bank[i])->count;
 	}
 	size *= 2;
-	//delete[]bank;
-	*bank = temp;
-	//delete[]temp;	//not sure if this is needed.
+
+	return temp;
 }
 
-bool if_commons(string &buffer, wordbank *bank[])
+bool if_commons(string &buffer)
 {
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < 50; i++)
 	{
-		if (buffer.compare(bank[i]->word) == 0)
-			return true;
+		if (buffer.compare(nay.list[i]) == 0)//str.compare kicks the bool only if it's false. Which is weird.
+		{return true;}
 	}
 	return false;
 }
 
-void commit(wordbank *bank[], string &buffer, int top)
+
+void commit(wordbank bank[], string &buffer)
 {
 	bool flag = false;
-	for (int i = 0; i < top; i++)
+	flag = false;
+	for (int i = 0; i < made; i++)
 	{
-		if (buffer.compare(bank[i]->word) == 0)
+		if (buffer == bank[i].word)
 		{
-			bank[i]->count++;
+			bank[i].count++;
 			flag = true;
+			break;
 		}
 	}
 	if (flag == false)
 	{
-		bank[top]->word = buffer;
-		bank[top]->count++;
+		bank[made].word = buffer;
+		bank[made].count++;
+		made++;
+	}
+	total++;
+}
+
+void sort(wordbank bank[])
+{
+	wordbank temp;
+	bool flag = true;
+	while (flag)
+	{
+		flag = false;
+		for (int i = 0; i < made-1; i++)
+		{
+			if (bank[i].count < bank[i + 1].count)
+			{
+				flag = true;
+				temp.count = bank[i].count;
+				temp.word = bank[i].word;
+				bank[i].count = bank[i + 1].count;
+				bank[i].word = bank[i + 1].word;
+				bank[i + 1].count = temp.count;
+				bank[i + 1].word = temp.word;
+			}
+		}
 	}
 }
 
