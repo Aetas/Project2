@@ -39,14 +39,12 @@ int doubled = 0;	//how many times doubled
 int made = 0;		//entries made
 int total = 0;		//commits
 
-int main()
+int main(int argc, char* argv[])
 {
-	string document;	//doc-to-be
-	int print_num;		//number of top words to print
-	cin >> document >> print_num;	//simple cin will work since they are spaced correctly	
+	int print_num = std::stoi(argv[2]);		//number of top words to print, string-to-integer
 
 	std::ifstream in_doc;	//make ifstream
-	in_doc.open(document);	//open file
+	in_doc.open(argv[1]);	//open file
 
 	wordbank *bank = new wordbank[size];	//start with the initial 100.
 	
@@ -77,6 +75,7 @@ int main()
 		{
 			cout << "\n Document not found"
 			<< "\n <name.txt>: ";
+			string document;
 			cin >> document;		//grab document -- number of lines was already stored
 			in_doc.open(document);	//open again to update contitions
 		}
