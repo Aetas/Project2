@@ -53,8 +53,9 @@ int main()
 	if (in_doc.is_open())	//check if it opened successfully
 	{
 		string buffer;	//simple string to work with
-		while (in_doc >> buffer)
+		while (!in_doc.eof())
 		{
+			in_doc >> buffer;
 			if (if_commons(buffer) == true)	//if it matches, don't do anything
 			{/*nothing*/
 			}
